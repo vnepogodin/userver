@@ -14,15 +14,6 @@ if(USERVER_CONAN AND "${gRPC_VERSION}" VERSION_GREATER_EQUAL "1.41")
   )
 endif()
 
-if("${gRPC_VERSION}" VERSION_GREATER_EQUAL "1.66")
-  message(
-      FATAL_ERROR
-      "userver currently does not support gRPC >= 1.66 due to a breaking "
-      "change in grpc-core that requires a fix in userver "
-      "https://github.com/grpc/grpc/pull/37321/files"
-  )
-endif()
-
 if(NOT TARGET userver-api-common-protos)
   include(SetupGoogleProtoApis)
 endif()
@@ -85,6 +76,15 @@ userver_generate_grpc_files(
 )
 add_library(${PROJECT_NAME}-proto STATIC ${generated_proto_sources})
 target_link_libraries(${PROJECT_NAME}-proto PUBLIC ${PROJECT_NAME}-deps)
+target_link_libraries(${PROJECT_NAME}-proto PUBLIC
+    absl::base
+    absl::log_globals
+    absl::log_internal_globals
+    absl::log_internal_message
+    absl::log_internal_check_op
+    absl::log_severity absl::raw_logging_internal
+    absl::strings
+)
 target_include_directories(${PROJECT_NAME}-proto SYSTEM PUBLIC $<BUILD_INTERFACE:${proto_include_paths}>)
 _userver_install_targets(COMPONENT grpc TARGETS ${PROJECT_NAME}-proto)
 
@@ -128,9 +128,13 @@ _userver_install_targets(COMPONENT grpc TARGETS ${PROJECT_NAME}-internal ${PROJE
 
 if (Protobuf_VERSION VERSION_GREATER_EQUAL 4.23.0)
     target_link_libraries(${PROJECT_NAME}-internal PUBLIC
+        absl::base
         absl::log_globals
         absl::log_internal_globals
+        absl::log_internal_message
         absl::log_internal_check_op
+        absl::log_severity absl::raw_logging_internal
+        absl::strings
     )
 endif()
 
